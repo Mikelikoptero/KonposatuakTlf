@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Konposatu Inorganikoak</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f1f8f4">
+<meta name="theme-color" content="#f1f8e9">
 <style>
 :root{
   --bg:#f1f8e9;
@@ -17,13 +17,17 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,system-ui}
 body{display:flex;flex-direction:column;height:100vh;background:var(--bg);color:var(--text)}
 header{
-  display:flex;align-items:center;padding:12px 16px;background:var(--card);
-  box-shadow:0 2px 4px rgba(0,0,0,.08)}
+  position:sticky;top:0;z-index:10;display:flex;align-items:center;padding:12px 16px;
+  background:var(--card);box-shadow:0 2px 4px rgba(0,0,0,.08)}
 #search{
   flex:1;border:1px solid #d0e0d7;border-radius:24px;padding:8px 14px;font-size:16px}
 #counter{
   margin-left:12px;width:30px;height:30px;border-radius:50%;background:var(--accent);
   color:#fff;display:grid;place-items:center;font-weight:bold}
+#reopen{
+  position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:24px;border:none;box-shadow:0 4px 12px rgba(0,0,0,.25);
+  display:none;place-items:center}
 #results{
   flex:1;padding:12px;overflow-y:auto}
 .compound-card{
@@ -59,6 +63,8 @@ button{
   <ul id="opts"></ul>
   <button onclick="closeSel()">Itxi</button>
 </div>
+
+<button id="reopen" onclick="reopenKeyboard()">🔍</button>
 
 <script>
 const names={
@@ -103,19 +109,27 @@ const db={
 
 let selected={};
 const max=3;
+const search=document.getElementById('search');
 const counter=document.getElementById('counter');
 const res=document.getElementById('results');
+const reopen=document.getElementById('reopen');
 
-document.getElementById('search').addEventListener('focus',openSel);
-document.getElementById('search').addEventListener('input',e=>fillOpts(e.target.value));
+search.addEventListener('focus',openSel);
+search.addEventListener('input',e=>fillOpts(e.target.value));
 
 function openSel(){
+  reopen.style.display='none';
   document.getElementById('selector').style.display='flex';
   fillOpts('');
 }
 function closeSel(){
   document.getElementById('selector').style.display='none';
-  document.getElementById('search').value='';
+  search.value='';
+  reopen.style.display='grid';
+}
+function reopenKeyboard(){
+  reopen.style.display='none';
+  search.focus();
 }
 function fillOpts(q){
   const ul=document.getElementById('opts');ul.innerHTML='';
@@ -148,7 +162,7 @@ function toggleList(sym){
   if(n>max){delete selected[sym]}
   else{if(!selected[sym]&&Object.keys(selected).length>=max){return}
        selected[sym]=n}
-  fillOpts(document.getElementById('search').value);
+  fillOpts(search.value);
   updateCounter();
 }
 function updateCounter(){
