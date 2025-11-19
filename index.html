@@ -770,24 +770,38 @@ function updateCounter(){
   calc();
 }
 function calc(){
-  const pick=Object.keys(selected);
-  let html='<h2>Konposatuak</h2>';
-  let found=0;
-  Object.entries(db).forEach(([key,arr])=>{
+  const pick = Object.keys(selected);
+  let html = '<h2>Konposatuak</h2>';
+  let found = 0;
+  
+  Object.entries(db).forEach(([key, arr]) => {
     const typ = typeNames[key] || key;
-    arr.forEach(c=>{
-      if(c.elements.every(x=>pick.includes(x))){
-		  found++;
-		  html+=`<div class="compound-card"><div class="compound-name">${c.formula} – ${c.name}</div><div class="compound-type">${typ}</div></div>`}
+    arr.forEach(c => {
+      // CORRECCIÓN: Verificar que el compuesto use EXACTAMENTE los elementos seleccionados
+      // 1. Todos los elementos del compuesto están en la selección
+      // 2. Todos los elementos de la selección están en el compuesto
+      // 3. Misma cantidad de elementos (para evitar duplicados)
+      const compElements = c.elements;
+      
+      // Verificar que el compuesto use exactamente los elementos seleccionados
+      const usesAllSelected = pick.every(element => compElements.includes(element));
+      const usesOnlySelected = compElements.every(element => pick.includes(element));
+      
+      if (usesAllSelected && usesOnlySelected) {
+        found++;
+        html += `<div class="compound-card"><div class="compound-name">${c.formula} – ${c.name}</div><div class="compound-type">${typ}</div></div>`;
+      }
     });
   });
-  if(!found)html+='<div class="no-results">Ez da aurkitu.</div>';
-  res.innerHTML=html;
-  wrapper.scrollTop=0;
+  
+  if (!found) html += '<div class="no-results">Ez da aurkitu.</div>';
+  res.innerHTML = html;
+  wrapper.scrollTop = 0;
 }
 calc();
 </script>
 </body>
 </html>
+
 
 
