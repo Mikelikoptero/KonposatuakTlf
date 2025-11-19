@@ -2,52 +2,63 @@
 <html lang="eu">
 <head>
 <meta charset="utf-8">
-<title>Konposatuak</title>
+<title>Konposatu Inorganikoak</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#004d40">
+<meta name="theme-color" content="#f1f8f4">
 <style>
-*     {box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
-body  {background:#004d40;color:#fff;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-#top  {display:flex;align-items:center;padding:8px 12px;background:#00695c}
-#top input{
-  flex:1;border:none;border-radius:20px;padding:6px 12px;font-size:16px;background:#ffffff26;color:#fff}
-#top input::placeholder{color:#ffffffaa}
+:root{
+  --bg:#f1f8f4;
+  --card:#fff;
+  --accent:#7a9c89;
+  --accent-dark:#5a7b68;
+  --text:#2c3e50;
+  --soft:#7f8c8d;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,system-ui}
+body{display:flex;flex-direction:column;height:100vh;background:var(--bg);color:var(--text)}
+header{
+  display:flex;align-items:center;padding:12px 16px;background:var(--card);
+  box-shadow:0 2px 4px rgba(0,0,0,.08)}
+#search{
+  flex:1;border:1px solid #d0e0d7;border-radius:24px;padding:8px 14px;font-size:16px}
 #counter{
-  margin-left:10px;width:32px;height:32px;border-radius:50%;background:#ffd54f;color:#004d40;
-  display:grid;place-items:center;font-weight:bold}
+  margin-left:12px;width:30px;height:30px;border-radius:50%;background:var(--accent);
+  color:#fff;display:grid;place-items:center;font-weight:bold}
 #swipe-wrap{
-  flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth}
+  flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
 .page{
-  min-width:100vw;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:12px}
+  min-width:100vw;scroll-snap-align:start;display:flex;flex-direction:column;
+  padding:16px 12px 0}
 .grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px;width:100%;max-width:420px}
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px}
 .cell{
-  position:relative;height:52px;border-radius:8px;background:#ffffff1a;display:grid;
-  place-items:center;cursor:pointer;user-select:none}
-.cell .sym{font-size:18px;font-weight:600}
-.cell .num{
-  position:absolute;bottom:4px;right:4px;font-size:11px;background:#ffd54f;color:#004d40;
-  border-radius:50%;width:16px;height:16px;display:grid;place-items:center;font-weight:bold;opacity:0}
-.cell.selected .num{opacity:1}
-#bot{
-  padding:12px;display:flex;gap:8px}
+  height:60px;border-radius:10px;background:var(--card);border:1px solid #e0e6e1;
+  display:grid;place-items:center;font-size:16px;font-weight:600}
+.cell .name{font-size:10px;font-weight:400;color:var(--soft)}
+#results{
+  padding:0 12px 16px;overflow-y:auto}
+.compound-card{
+  background:var(--card);border:1px solid #d0e0d7;border-radius:12px;padding:12px;margin-bottom:8px}
+.compound-name{font-weight:600;margin-bottom:4px}
+.compound-type{font-size:12px;color:var(--soft)}
+.no-results{color:var(--soft);text-align:center;margin-top:24px}
+#selector{
+  position:fixed;inset:0;background:#0009;display:none;flex-direction:column;
+  padding:12px;background:#00000066}
+#selector ul{background:var(--card);border-radius:12px;max-height:60vh;overflow-y:auto}
+#selector li{
+  display:flex;align-items:center;padding:12px;border-bottom:1px solid #e0e6e1}
+#selector li:last-child{border:none}
+#selector input{margin-right:12px}
+#selector button{margin-top:12px;width:100%}
 button{
-  flex:1;border:none;padding:12px;border-radius:24px;background:#ffd54f;color:#004d40;
-  font-weight:bold;font-size:16px}
-#res{
-  position:fixed;inset:0;background:#000e;background:#000000ee;color:#fff;
-  display:none;flex-direction:column;padding:12px}
-#res.close{animation:fadeOut .3s forwards}
-#res h2{margin:8px 0 4px;font-size:18px}
-#res .card{
-  background:#ffffff1a;border-radius:8px;padding:10px;margin-bottom:6px;font-size:14px}
-@keyframes fadeOut{to{opacity:0}}
+  border:none;padding:12px;border-radius:24px;background:var(--accent);color:#fff;font-weight:bold}
 </style>
 </head>
 <body>
-<header id="top">
-  <input id="search" placeholder="Elementua bilatu..." autocomplete="off">
+
+<header>
+  <input id="search" placeholder="Elementuak bilatu..." autocomplete="off">
   <div id="counter">0</div>
 </header>
 
@@ -56,26 +67,14 @@ button{
   <section class="page" id="nometales"></section>
 </div>
 
-<footer id="bot">
-  <button onclick="calc()">Sortu konposatuak</button>
-  <button onclick="reset()">Garbitu</button>
-</footer>
+<div id="results"></div>
 
-<div id="res" onclick="closeRes(event)"></div>
+<div id="selector">
+  <ul id="opts"></ul>
+  <button onclick="closeSel()">Itxi</button>
+</div>
 
 <script>
-const elems={
-  metal:[
-    "Li Na K Rb Cs Fr Ag".split(" "),
-    "Be Mg Ca Sr Ba Ra Zn Cd".split(" "),
-    "Cu Hg Au Fe Co Ni Cr Mn Al Sn Pb Bi".split(" ")
-  ],
-  no:[
-    "H O".split(" "),
-    "F Cl Br I".split(" "),
-    "S Se Te N P As Sb C Si B".split(" ")
-  ]
-};
 const names={
   Li:"Litio",Na:"Sodio",K:"Potasio",Rb:"Rubidio",Cs:"Zesio",Fr:"Frantzio",Ag:"Zilar",
   Be:"Berilio",Mg:"Magnesio",Ca:"Kaltzio",Sr:"Estrontzio",Ba:"Bario",Ra:"Radio",Zn:"Zink",Cd:"Kadmio",
@@ -115,63 +114,72 @@ const db={
   ]
 };
 
-let sel={};
+let selected={};
 const max=3;
 const counter=document.getElementById('counter');
-const res=document.getElementById('res');
+const res=document.getElementById('results');
 
-function paint(list,wrap){
-  list.forEach(gr=>{
-    gr.forEach(sym=>{
-      const c=document.createElement('div');
-      c.className='cell';c.dataset.sym=sym;
-      c.innerHTML=`<span class="sym">${sym}</span><span class="num">0</span>`;
-      c.onclick=()=>toggle(sym,c);
-      wrap.appendChild(c);
-    });
+function paint(){
+  const m=document.getElementById('metales'),n=document.getElementById('nometales');
+  Object.keys(names).forEach(s=>{
+    const div=document.createElement('div');div.className='cell';
+    div.innerHTML=`<div class="sym">${s}</div><div class="name">${names[s]}</div>`;
+    (names[s].endsWith('a')&&!['Soda','Potasa','Amps'].includes(names[s])?m:n).appendChild(div);
   });
 }
-paint(elems.metal,document.getElementById('metales'));
-paint(elems.no,document.getElementById('nometales'));
+paint();
 
-function toggle(sym,cell){
-  const n=(sel[sym]||0)+1;
-  if(n>max){n=0}
-  if(n===0){delete sel[sym];cell.classList.remove('selected')}
-  else{if(!sel[sym]&&Object.keys(sel).length>=max){return}
-       sel[sym]=n;cell.classList.add('selected')}
-  cell.querySelector('.num').textContent=n;
-  updateCounter();
+document.getElementById('search').addEventListener('focus',openSel);
+document.getElementById('search').addEventListener('input',e=>fillOpts(e.target.value));
+
+function openSel(){
+  document.getElementById('selector').style.display='flex';
+  fillOpts('');
 }
-function updateCounter(){counter.textContent=Object.keys(sel).length}
-function reset(){
-  sel={};
-  document.querySelectorAll('.cell').forEach(c=>{c.classList.remove('selected');c.querySelector('.num').textContent=0});
-  updateCounter();
+function closeSel(){
+  document.getElementById('selector').style.display='none';
+  document.getElementById('search').value='';
 }
-document.getElementById('search').addEventListener('input',e=>{
-  const q=e.target.value.toLowerCase();
-  document.querySelectorAll('.cell').forEach(c=>{
-    const s=c.dataset.sym;
-    c.style.display=(names[s].toLowerCase().includes(q)||s.toLowerCase().includes(q))?'':'none';
+function fillOpts(q){
+  const ul=document.getElementById('opts');ul.innerHTML='';
+  const norm=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  Object.entries(names).forEach(([s,n])=>{
+    if(q===''||n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
+      const li=document.createElement('li');
+      const chk=document.createElement('input');chk.type='checkbox';
+      chk.checked=!!selected[s];
+      chk.onchange=()=>toggleList(s);
+      li.appendChild(chk);
+      li.appendChild(document.createTextNode(`${n} (${s})`));
+      ul.appendChild(li);
+    }
   });
-});
-
+}
+function toggleList(sym){
+  const n=(selected[sym]||0)+1;
+  if(n>max){delete selected[sym]}
+  else{if(!selected[sym]&&Object.keys(selected).length>=max){return}
+       selected[sym]=n}
+  fillOpts(document.getElementById('search').value);
+  updateCounter();
+}
+function updateCounter(){
+  counter.textContent=Object.keys(selected).length;
+  calc();
+}
 function calc(){
-  if(Object.keys(sel).length<2){alert('Aukeratu gutxienez bi elementu');return}
-  const pick=Object.keys(sel);
-  let out='<h2>Konposatuak</h2>';
+  const pick=Object.keys(selected);
+  let html='<h2>Konposatuak</h2>';
   let found=0;
   Object.entries(db).forEach(([typ,arr])=>{
     arr.forEach(c=>{
-      const needs=c.e.every(x=>pick.includes(x));
-      if(needs){found++;out+=`<div class="card"><b>${c.f}</b> – ${c.n}<br><small>${typ}</small></div>`}
+      if(c.e.every(x=>pick.includes(x))){found++;html+=`<div class="compound-card"><div class="compound-name">${c.f} – ${c.n}</div><div class="compound-type">${typ}</div></div>`}
     });
   });
-  if(!found)out+='<div class="card">Ez da aurkitu.</div>';
-  res.innerHTML=out;res.style.display='flex';
+  if(!found)html+='<div class="no-results">Ez da aurkitu.</div>';
+  res.innerHTML=html;
 }
-function closeRes(e){if(e.target===res){res.classList.add('close');setTimeout(()=>{res.style.display='';res.classList.remove('close')},300)}}
+calc();
 </script>
 </body>
 </html>
