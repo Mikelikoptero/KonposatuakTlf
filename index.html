@@ -706,6 +706,17 @@ const res=document.getElementById('results');
 const reopen=document.getElementById('reopen');
 const wrapper=document.getElementById('results-wrapper');
 
+// Mapa de tipos para mostrar en euskera
+const typeNames = {
+    oxid: "Oxidoa",
+    gatz: "Gatz bitarra",
+    hidrox: "Hidroxidoaa",
+    azid: "Oxoazidoa",
+    metalHydrides: "Hidruro metalikoa",
+    nonmetalHydrides: "Hidruro ez metalikoa",
+    peroxides: "Peroxidoa"
+};
+
 search.addEventListener('focus',openSel);
 search.addEventListener('input',e=>fillOpts(e.target.value));
 
@@ -763,7 +774,8 @@ function calc(){
   const pick=Object.keys(selected);
   let html='<h2>Konposatuak</h2>';
   let found=0;
-  Object.entries(db).forEach(([typ,arr])=>{
+  Object.entries(db).forEach(([key,arr])=>{
+    const typ = typeNames[key] || key;
     arr.forEach(c=>{
       if(c.e.every(x=>pick.includes(x))){found++;html+=`<div class="compound-card"><div class="compound-name">${c.f} – ${c.n}</div><div class="compound-type">${typ}</div></div>`}
     });
@@ -776,5 +788,3 @@ calc();
 </script>
 </body>
 </html>
-
-
