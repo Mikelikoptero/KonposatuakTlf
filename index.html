@@ -24,8 +24,9 @@ header{
 #counter{
   margin-left:12px;width:30px;height:30px;border-radius:50%;background:var(--accent);
   color:#fff;display:grid;place-items:center;font-weight:bold}
-#results{
-  flex:1;padding:68px 12px 12px;overflow-y:auto}   /* 56 + 12 px extra */
+#results-wrapper{
+  flex:1;overflow-y:auto;padding:16px 12px 24px}   /* espacio extra arriba y abajo */
+#results{padding-top:4px}   /* pequeño ajuste fino */
 .compound-card{
   background:var(--card);border:1px solid #d0e0d7;border-radius:12px;padding:12px;margin-bottom:8px}
 .compound-name{font-weight:600;margin-bottom:4px}
@@ -57,7 +58,9 @@ button{
   <div id="counter">0</div>
 </header>
 
-<div id="results"></div>
+<div id="results-wrapper">
+  <div id="results"></div>
+</div>
 
 <div id="selector">
   <ul id="opts"></ul>
@@ -113,6 +116,7 @@ const search=document.getElementById('search');
 const counter=document.getElementById('counter');
 const res=document.getElementById('results');
 const reopen=document.getElementById('reopen');
+const wrapper=document.getElementById('results-wrapper');
 
 search.addEventListener('focus',openSel);
 search.addEventListener('input',e=>fillOpts(e.target.value));
@@ -134,13 +138,11 @@ function reopenKeyboard(){
 function fillOpts(q){
   const ul=document.getElementById('opts');ul.innerHTML='';
   const norm=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  // Primero H y O
   ['H','O'].forEach(s=>{
     if(q===''||names[s].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
       ul.appendChild(createLi(s));
     }
   });
-  // Resto
   Object.keys(names).filter(s=>!['H','O'].includes(s)).forEach(s=>{
     if(q===''||names[s].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
       ul.appendChild(createLi(s));
@@ -180,6 +182,7 @@ function calc(){
   });
   if(!found)html+='<div class="no-results">Ez da aurkitu.</div>';
   res.innerHTML=html;
+  wrapper.scrollTop=0;   /* <<< clave: siempre visible el primer compuesto */
 }
 calc();
 </script>
