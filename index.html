@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="eu">
+<head>
+<meta charset="utf-8">
+<title>Konposatuak</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#004d40">
+<style>
+*     {box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
+body  {background:#004d40;color:#fff;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#top  {display:flex;align-items:center;padding:8px 12px;background:#00695c}
+#top input{
+  flex:1;border:none;border-radius:20px;padding:6px 12px;font-size:16px;background:#ffffff26;color:#fff}
+#top input::placeholder{color:#ffffffaa}
+#counter{
+  margin-left:10px;width:32px;height:32px;border-radius:50%;background:#ffd54f;color:#004d40;
+  display:grid;place-items:center;font-weight:bold}
+#swipe-wrap{
+  flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth}
+.page{
+  min-width:100vw;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:12px}
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px;width:100%;max-width:420px}
+.cell{
+  position:relative;height:52px;border-radius:8px;background:#ffffff1a;display:grid;
+  place-items:center;cursor:pointer;user-select:none}
+.cell .sym{font-size:18px;font-weight:600}
+.cell .num{
+  position:absolute;bottom:4px;right:4px;font-size:11px;background:#ffd54f;color:#004d40;
+  border-radius:50%;width:16px;height:16px;display:grid;place-items:center;font-weight:bold;opacity:0}
+.cell.selected .num{opacity:1}
+#bot{
+  padding:12px;display:flex;gap:8px}
+button{
+  flex:1;border:none;padding:12px;border-radius:24px;background:#ffd54f;color:#004d40;
+  font-weight:bold;font-size:16px}
+#res{
+  position:fixed;inset:0;background:#000e;background:#000000ee;color:#fff;
+  display:none;flex-direction:column;padding:12px}
+#res.close{animation:fadeOut .3s forwards}
+#res h2{margin:8px 0 4px;font-size:18px}
+#res .card{
+  background:#ffffff1a;border-radius:8px;padding:10px;margin-bottom:6px;font-size:14px}
+@keyframes fadeOut{to{opacity:0}}
+</style>
+</head>
+<body>
+<header id="top">
+  <input id="search" placeholder="Elementua bilatu..." autocomplete="off">
+  <div id="counter">0</div>
+</header>
+
+<div id="swipe-wrap">
+  <section class="page" id="metales"></section>
+  <section class="page" id="nometales"></section>
+</div>
+
+<footer id="bot">
+  <button onclick="calc()">Sortu konposatuak</button>
+  <button onclick="reset()">Garbitu</button>
+</footer>
+
+<div id="res" onclick="closeRes(event)"></div>
+
+<script>
+const elems={
+  metal:[
+    "Li Na K Rb Cs Fr Ag".split(" "),
+    "Be Mg Ca Sr Ba Ra Zn Cd".split(" "),
+    "Cu Hg Au Fe Co Ni Cr Mn Al Sn Pb Bi".split(" ")
+  ],
+  no:[
+    "H O".split(" "),
+    "F Cl Br I".split(" "),
+    "S Se Te N P As Sb C Si B".split(" ")
+  ]
+};
+const names={
+  Li:"Litio",Na:"Sodio",K:"Potasio",Rb:"Rubidio",Cs:"Zesio",Fr:"Frantzio",Ag:"Zilar",
+  Be:"Berilio",Mg:"Magnesio",Ca:"Kaltzio",Sr:"Estrontzio",Ba:"Bario",Ra:"Radio",Zn:"Zink",Cd:"Kadmio",
+  Cu:"Kobre",Hg:"Merkurio",Au:"Urrea",Fe:"Burdina",Co:"Kobalto",Ni:"Nikel",Cr:"Kromo",Mn:"Manganeso",Al:"Aluminio",
+  Sn:"Eztainu",Pb:"Beruna",Bi:"Bismuto",
+  H:"Hidrogeno",O:"Oxigeno",F:"Fluor",Cl:"Kloro",Br:"Bromo",I:"Iodo",S:"Sufre",Se:"Selenio",Te:"Telurio",
+  N:"Nitrogeno",P:"Fosforo",As:"Artseniko",Sb:"Antimonio",C:"Karbono",Si:"Silizio",B:"Boro"
+};
+const db={
+  oxidoa:[
+    {f:"Li₂O",n:"Litio oxidoa",e:["Li","O"]},{f:"Na₂O",n:"Sodio oxidoa",e:["Na","O"]},
+    {f:"K₂O",n:"Potasio oxidoa",e:["K","O"]},{f:"MgO",n:"Magnesio oxidoa",e:["Mg","O"]},
+    {f:"CaO",n:"Kaltzio oxidoa",e:["Ca","O"]},{f:"Al₂O₃",n:"Aluminio oxidoa",e:["Al","O"]},
+    {f:"CO",n:"Karbono(II) oxidoa",e:["C","O"]},{f:"CO₂",n:"Karbono(IV) oxidoa",e:["C","O"]},
+    {f:"SO₂",n:"Sufre(IV) oxidoa",e:["S","O"]},{f:"SO₃",n:"Sufre(VI) oxidoa",e:["S","O"]},
+    {f:"NO",n:"Nitrogeno(II) oxidoa",e:["N","O"]},{f:"NO₂",n:"Nitrogeno(IV) oxidoa",e:["N","O"]},
+    {f:"CuO",n:"Kobre(II) oxidoa",e:["Cu","O"]},{f:"FeO",n:"Burdin(II) oxidoa",e:["Fe","O"]},
+    {f:"Fe₂O₃",n:"Burdin(III) oxidoa",e:["Fe","O"]},{f:"H₂O",n:"Ura",e:["H","O"]}
+  ],
+  gatz:[
+    {f:"NaCl",n:"Sodio kloruroa",e:["Na","Cl"]},{f:"KCl",n:"Potasio kloruroa",e:["K","Cl"]},
+    {f:"MgCl₂",n:"Magnesio kloruroa",e:["Mg","Cl"]},{f:"CaCl₂",n:"Kaltzio kloruroa",e:["Ca","Cl"]},
+    {f:"CuCl",n:"Kobre(I) kloruroa",e:["Cu","Cl"]},{f:"CuCl₂",n:"Kobre(II) kloruroa",e:["Cu","Cl"]},
+    {f:"AgCl",n:"Zilar kloruroa",e:["Ag","Cl"]},{f:"FeCl₂",n:"Burdin(II) kloruroa",e:["Fe","Cl"]},
+    {f:"FeCl₃",n:"Burdin(III) kloruroa",e:["Fe","Cl"]},{f:"AlCl₃",n:"Aluminio kloruroa",e:["Al","Cl"]},
+    {f:"NaF",n:"Sodio fluoruroa",e:["Na","F"]},{f:"NaBr",n:"Sodio bromuroa",e:["Na","Br"]},
+    {f:"NaI",n:"Sodio yoduroa",e:["Na","I"]}
+  ],
+  hidrox:[
+    {f:"NaOH",n:"Sodio hidroxidoa",e:["Na","O","H"]},{f:"KOH",n:"Potasio hidroxidoa",e:["K","O","H"]},
+    {f:"Ca(OH)₂",n:"Kaltzio hidroxidoa",e:["Ca","O","H"]},{f:"Al(OH)₃",n:"Aluminio hidroxidoa",e:["Al","O","H"]}
+  ],
+  azid:[
+    {f:"HCl",n:"Azido klorhidrikoa",e:["H","Cl"]},{f:"H₂SO₄",n:"Azido sulfurikoa",e:["H","S","O"]},
+    {f:"HNO₃",n:"Azido nitrikoa",e:["H","N","O"]},{f:"H₂CO₃",n:"Azido karbonikoa",e:["H","C","O"]},
+    {f:"H₃PO₄",n:"Azido fosforikoa",e:["H","P","O"]}
+  ]
+};
+
+let sel={};
+const max=3;
+const counter=document.getElementById('counter');
+const res=document.getElementById('res');
+
+function paint(list,wrap){
+  list.forEach(gr=>{
+    gr.forEach(sym=>{
+      const c=document.createElement('div');
+      c.className='cell';c.dataset.sym=sym;
+      c.innerHTML=`<span class="sym">${sym}</span><span class="num">0</span>`;
+      c.onclick=()=>toggle(sym,c);
+      wrap.appendChild(c);
+    });
+  });
+}
+paint(elems.metal,document.getElementById('metales'));
+paint(elems.no,document.getElementById('nometales'));
+
+function toggle(sym,cell){
+  const n=(sel[sym]||0)+1;
+  if(n>max){n=0}
+  if(n===0){delete sel[sym];cell.classList.remove('selected')}
+  else{if(!sel[sym]&&Object.keys(sel).length>=max){return}
+       sel[sym]=n;cell.classList.add('selected')}
+  cell.querySelector('.num').textContent=n;
+  updateCounter();
+}
+function updateCounter(){counter.textContent=Object.keys(sel).length}
+function reset(){
+  sel={};
+  document.querySelectorAll('.cell').forEach(c=>{c.classList.remove('selected');c.querySelector('.num').textContent=0});
+  updateCounter();
+}
+document.getElementById('search').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase();
+  document.querySelectorAll('.cell').forEach(c=>{
+    const s=c.dataset.sym;
+    c.style.display=(names[s].toLowerCase().includes(q)||s.toLowerCase().includes(q))?'':'none';
+  });
+});
+
+function calc(){
+  if(Object.keys(sel).length<2){alert('Aukeratu gutxienez bi elementu');return}
+  const pick=Object.keys(sel);
+  let out='<h2>Konposatuak</h2>';
+  let found=0;
+  Object.entries(db).forEach(([typ,arr])=>{
+    arr.forEach(c=>{
+      const needs=c.e.every(x=>pick.includes(x));
+      if(needs){found++;out+=`<div class="card"><b>${c.f}</b> – ${c.n}<br><small>${typ}</small></div>`}
+    });
+  });
+  if(!found)out+='<div class="card">Ez da aurkitu.</div>';
+  res.innerHTML=out;res.style.display='flex';
+}
+function closeRes(e){if(e.target===res){res.classList.add('close');setTimeout(()=>{res.style.display='';res.classList.remove('close')},300)}}
+</script>
+</body>
+</html>
