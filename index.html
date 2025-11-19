@@ -777,7 +777,9 @@ function calc(){
   Object.entries(db).forEach(([key,arr])=>{
     const typ = typeNames[key] || key;
     arr.forEach(c=>{
-      if(c.e.every(x=>pick.includes(x))){found++;html+=`<div class="compound-card"><div class="compound-name">${c.f} – ${c.n}</div><div class="compound-type">${typ}</div></div>`}
+      if(c.elements.every(x=>pick.includes(x))){
+		  found++;
+		  html+=`<div class="compound-card"><div class="compound-name">${c.formula} – ${c.name}</div><div class="compound-type">${typ}</div></div>`}
     });
   });
   if(!found)html+='<div class="no-results">Ez da aurkitu.</div>';
@@ -788,3 +790,4 @@ calc();
 </script>
 </body>
 </html>
+
