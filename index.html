@@ -34,6 +34,8 @@ header{
 .cell{
   height:60px;border-radius:10px;background:var(--card);border:1px solid #e0e6e1;
   display:grid;place-items:center;font-size:16px;font-weight:600}
+.cell.metal{background:#e8f5e9;border-color:#a5d6a7}
+.cell.nonmetal{background:#f5f5f5;border-color:#e0e0e0}
 .cell .name{font-size:10px;font-weight:400;color:var(--soft)}
 #results{
   padding:0 12px 16px;overflow-y:auto}
@@ -76,23 +78,24 @@ button{
 
 <script>
 const names={
+  H:"Hidrogeno",O:"Oxigeno",F:"Fluor",Cl:"Kloro",Br:"Bromo",I:"Iodo",
+  S:"Sufre",Se:"Selenio",Te:"Telurio",N:"Nitrogeno",P:"Fosforo",As:"Artseniko",Sb:"Antimonio",
+  C:"Karbono",Si:"Silizio",B:"Boro",
   Li:"Litio",Na:"Sodio",K:"Potasio",Rb:"Rubidio",Cs:"Zesio",Fr:"Frantzio",Ag:"Zilar",
   Be:"Berilio",Mg:"Magnesio",Ca:"Kaltzio",Sr:"Estrontzio",Ba:"Bario",Ra:"Radio",Zn:"Zink",Cd:"Kadmio",
   Cu:"Kobre",Hg:"Merkurio",Au:"Urrea",Fe:"Burdina",Co:"Kobalto",Ni:"Nikel",Cr:"Kromo",Mn:"Manganeso",Al:"Aluminio",
-  Sn:"Eztainu",Pb:"Beruna",Bi:"Bismuto",
-  H:"Hidrogeno",O:"Oxigeno",F:"Fluor",Cl:"Kloro",Br:"Bromo",I:"Iodo",S:"Sufre",Se:"Selenio",Te:"Telurio",
-  N:"Nitrogeno",P:"Fosforo",As:"Artseniko",Sb:"Antimonio",C:"Karbono",Si:"Silizio",B:"Boro"
+  Sn:"Eztainu",Pb:"Beruna",Bi:"Bismuto"
 };
 const db={
   oxidoa:[
-    {f:"Li₂O",n:"Litio oxidoa",e:["Li","O"]},{f:"Na₂O",n:"Sodio oxidoa",e:["Na","O"]},
-    {f:"K₂O",n:"Potasio oxidoa",e:["K","O"]},{f:"MgO",n:"Magnesio oxidoa",e:["Mg","O"]},
-    {f:"CaO",n:"Kaltzio oxidoa",e:["Ca","O"]},{f:"Al₂O₃",n:"Aluminio oxidoa",e:["Al","O"]},
-    {f:"CO",n:"Karbono(II) oxidoa",e:["C","O"]},{f:"CO₂",n:"Karbono(IV) oxidoa",e:["C","O"]},
-    {f:"SO₂",n:"Sufre(IV) oxidoa",e:["S","O"]},{f:"SO₃",n:"Sufre(VI) oxidoa",e:["S","O"]},
-    {f:"NO",n:"Nitrogeno(II) oxidoa",e:["N","O"]},{f:"NO₂",n:"Nitrogeno(IV) oxidoa",e:["N","O"]},
-    {f:"CuO",n:"Kobre(II) oxidoa",e:["Cu","O"]},{f:"FeO",n:"Burdin(II) oxidoa",e:["Fe","O"]},
-    {f:"Fe₂O₃",n:"Burdin(III) oxidoa",e:["Fe","O"]},{f:"H₂O",n:"Ura",e:["H","O"]}
+    {f:"H₂O",n:"Ura",e:["H","O"]},{f:"Li₂O",n:"Litio oxidoa",e:["Li","O"]},
+    {f:"Na₂O",n:"Sodio oxidoa",e:["Na","O"]},{f:"K₂O",n:"Potasio oxidoa",e:["K","O"]},
+    {f:"MgO",n:"Magnesio oxidoa",e:["Mg","O"]},{f:"CaO",n:"Kaltzio oxidoa",e:["Ca","O"]},
+    {f:"Al₂O₃",n:"Aluminio oxidoa",e:["Al","O"]},{f:"CO",n:"Karbono(II) oxidoa",e:["C","O"]},
+    {f:"CO₂",n:"Karbono(IV) oxidoa",e:["C","O"]},{f:"SO₂",n:"Sufre(IV) oxidoa",e:["S","O"]},
+    {f:"SO₃",n:"Sufre(VI) oxidoa",e:["S","O"]},{f:"NO",n:"Nitrogeno(II) oxidoa",e:["N","O"]},
+    {f:"NO₂",n:"Nitrogeno(IV) oxidoa",e:["N","O"]},{f:"CuO",n:"Kobre(II) oxidoa",e:["Cu","O"]},
+    {f:"FeO",n:"Burdin(II) oxidoa",e:["Fe","O"]},{f:"Fe₂O₃",n:"Burdin(III) oxidoa",e:["Fe","O"]}
   ],
   gatz:[
     {f:"NaCl",n:"Sodio kloruroa",e:["Na","Cl"]},{f:"KCl",n:"Potasio kloruroa",e:["K","Cl"]},
@@ -121,11 +124,26 @@ const res=document.getElementById('results');
 
 function paint(){
   const m=document.getElementById('metales'),n=document.getElementById('nometales');
-  Object.keys(names).forEach(s=>{
-    const div=document.createElement('div');div.className='cell';
+  // Primero H y O
+  ['H','O'].forEach(s=>{
+    const div=document.createElement('div');div.className='cell nonmetal';
     div.innerHTML=`<div class="sym">${s}</div><div class="name">${names[s]}</div>`;
-    (names[s].endsWith('a')&&!['Soda','Potasa','Amps'].includes(names[s])?m:n).appendChild(div);
+    n.appendChild(div);
   });
+  // Resto ez-metalak
+  Object.keys(names).filter(s=>!['H','O'].includes(s)&&['F','Cl','Br','I','S','Se','Te','N','P','As','Sb','C','Si','B'].includes(s))
+    .forEach(s=>{
+      const div=document.createElement('div');div.className='cell nonmetal';
+      div.innerHTML=`<div class="sym">${s}</div><div class="name">${names[s]}</div>`;
+      n.appendChild(div);
+    });
+  // Metalak
+  Object.keys(names).filter(s=>!['H','O','F','Cl','Br','I','S','Se','Te','N','P','As','Sb','C','Si','B'].includes(s))
+    .forEach(s=>{
+      const div=document.createElement('div');div.className='cell metal';
+      div.innerHTML=`<div class="sym">${s}</div><div class="name">${names[s]}</div>`;
+      m.appendChild(div);
+    });
 }
 paint();
 
@@ -143,17 +161,27 @@ function closeSel(){
 function fillOpts(q){
   const ul=document.getElementById('opts');ul.innerHTML='';
   const norm=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  Object.entries(names).forEach(([s,n])=>{
-    if(q===''||n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
-      const li=document.createElement('li');
-      const chk=document.createElement('input');chk.type='checkbox';
-      chk.checked=!!selected[s];
-      chk.onchange=()=>toggleList(s);
-      li.appendChild(chk);
-      li.appendChild(document.createTextNode(`${n} (${s})`));
-      ul.appendChild(li);
+  // Primero H y O
+  ['H','O'].forEach(s=>{
+    if(q===''||names[s].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
+      ul.appendChild(createLi(s));
     }
   });
+  // Resto
+  Object.keys(names).filter(s=>!['H','O'].includes(s)).forEach(s=>{
+    if(q===''||names[s].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(norm)||s.toLowerCase().includes(norm)){
+      ul.appendChild(createLi(s));
+    }
+  });
+}
+function createLi(s){
+  const li=document.createElement('li');
+  const chk=document.createElement('input');chk.type='checkbox';
+  chk.checked=!!selected[s];
+  chk.onchange=()=>toggleList(s);
+  li.appendChild(chk);
+  li.appendChild(document.createTextNode(`${names[s]} (${s})`));
+  return li;
 }
 function toggleList(sym){
   const n=(selected[sym]||0)+1;
